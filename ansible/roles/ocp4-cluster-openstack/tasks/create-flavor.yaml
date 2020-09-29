@@ -1,11 +1,23 @@
 ---
+- name: Lookup {{ master_flavor }}
+  openstack.cloud.compute_flavor_info:
+    name: "{{ master_flavor }}"
+  register: master_flavor_result
+
 - name: "Create '{{ master_flavor }} flavor with {{ master_ram }} of RAM, {{ master_cpu }} virtual CPU."
   openstack.cloud.compute_flavor:
     state: present
     name: "{{ master_flavor }}"
     ram: "{{ master_memory_size }}"
     vcpus: "{{ master_vcpu }}"
+  when: "master_flavor_result.openstack_flavors is not defined or master_flavor_result.openstack_flavors|length()<=0"
   tags: flavor
+
+- name: Lookup {{ compute_flavor }}
+  openstack.cloud.compute_flavor_info:
+    name: "{{ compute_flavor }}"
+  register: compute_flavor_result
+
 
 - name: "Create '{{ compute_flavor }} flavor with {{ compute_ram }} of RAM, {{ compute_cpu }} virtual CPU."
   openstack.cloud.compute_flavor:
@@ -13,4 +25,5 @@
     name: "{{ compute_flavor }}"
     ram: "{{ compute_memory_size }}"
     vcpus: "{{ compute_vcpu }}"
+  when: "compute_flavor_result.openstack_flavors is not defined or compute_flavor_result.openstack_flavors|length()<=0"
   tags: flavor

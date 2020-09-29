@@ -2,7 +2,7 @@
   set_fact:
     # User-provided values
     os_subnet_range: "{{ machine_network }}"
-    os_flavor_master: "{{ osp_compute_flavor }}"
+    os_flavor_master: "{{ osp_master_flavor }}"
     os_flavor_worker: "{{ osp_compute_flavor }}"
     os_image_rhcos: "{{ rhcos_image }}"
     # Service subnet cidr
