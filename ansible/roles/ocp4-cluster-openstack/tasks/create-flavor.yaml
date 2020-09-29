@@ -1,0 +1,16 @@
+---
+- name: "Create '{{ master_flavor }} flavor with {{ master_ram }} of RAM, {{ master_cpu }} virtual CPU."
+  openstack.cloud.compute_flavor:
+    state: present
+    name: "{{ master_flavor }}"
+    ram: "{{ master_memory_size }}"
+    vcpus: "{{ master_vcpu }}"
+  tags: flavor
+
+- name: "Create '{{ compute_flavor }} flavor with {{ compute_ram }} of RAM, {{ compute_cpu }} virtual CPU."
+  openstack.cloud.compute_flavor:
+    state: present
+    name: "{{ compute_flavor }}"
+    ram: "{{ compute_memory_size }}"
+    vcpus: "{{ compute_vcpu }}"
+  tags: flavor

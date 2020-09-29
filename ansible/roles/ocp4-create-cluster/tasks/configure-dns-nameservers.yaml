@@ -1,0 +1,27 @@
+- name: Lookup subnet dns nameserver
+  openstack.cloud.subnets_info:
+    name: "{{ os_subnet }}"
+  register: subnet_result
+  tags: dns
+
+- name: "Debug subnet infos"
+  debug:
+    msg: "{{ subnet_result.openstack_subnets[0].dns_nameservers }}"
+  tags: dns
+
+- name: "Register current nameservers"
+  set_fact:
+    current_nameservers: "{{ subnet_result.openstack_subnets[0].dns_nameservers | list }}"
+  tags: dns
+
+- name: 'Debug external dns nameserver'
+  debug:
+    msg: "openstack subnet set --dns-nameserver {{ osp_external_dns | map('regex_replace', '^(.*)$', '\"\\1\"' ) | join(' --dns-nameserver ') }} {{ os_subnet }}"
+  when: "osp_external_dns is defined and (osp_external_dns|length()>0) and (current_nameservers is not defined or (current_nameservers|length()<=0))"
+  tags: dns
+
+- name: 'Configure external dns nameserver'
+  command:
+    cmd: "openstack subnet set --dns-nameserver {{ osp_external_dns | map('regex_replace', '^(.*)$', '\"\\1\"' ) | join(' --dns-nameserver ') }} {{ os_subnet }}"
+  when: "osp_external_dns is defined and (osp_external_dns|length()>0) and (current_nameservers is not defined or (current_nameservers|length()<=0))"
+  tags: dns

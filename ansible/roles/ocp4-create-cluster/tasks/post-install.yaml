@@ -1,0 +1,28 @@
+- name: Info message
+  debug:
+    msg:
+      - "If you like to follow the installation run 'tail -f  {{ openshift_install_dir }}/.openshift_install.log' in a second terminal."
+      - "For more details, connect to the bootstrap node: ssh -l core {{ os_subnet.split('.')[:3] | join('.')}}.2"
+
+- name: Waiting for bootstrap to complete
+  command: "openshift-install wait-for bootstrap-complete --dir {{ openshift_install_dir }} --log-level debug"
+  register: bootstrap_status
+  retries: 60
+  delay: 60
+  until: bootstrap_status.rc == 0
+
+- name: Destroy bootstrap node
+  include: down-bootstrap.yaml
+  when: False
+
+- name: Start background node approver process
+  async: 1800   #   30 minutes
+  poll: 0
+  shell: |
+    while true
+    do
+      oc --kubeconfig="{{ openshift_install_dir }}/auth/kubeconfig" get csr --no-headers | \
+        awk '/Pending/ {print $1}' | \
+        xargs --no-run-if-empty oc --kubeconfig="{{ openshift_install_dir }}/auth/kubeconfig" adm certificate approve
+      sleep 1
+    done

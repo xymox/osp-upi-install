@@ -1,0 +1,41 @@
+---
+- name: Load common vars
+  include: common.yaml
+  tags: always
+
+- name: Load specific vars
+  include: specific.yaml
+  tags: always
+
+- name: Debug var inclusion
+  debug:
+    msg: "Vars computed {{ os_bootstrap_ignition }}"
+  tags: debug
+
+- name: Create OSP Security Group
+  include: security-groups.yaml
+  tags: network
+
+- name: Create OSP Network
+  include: network.yaml
+  tags: network
+
+- name: Configure dns nameservers
+  include: configure-dns-nameservers.yaml
+  tags: dns
+
+- name: Create bootstrap server
+  include: bootstrap-volume.yaml
+  tags: bootstrap
+
+- name: Create control plane
+  include: control-plane-volume.yaml
+  tags: control-plane
+
+- name: Create compute nodes
+  include: compute-nodes-volume.yaml
+  tags: compute-nodes
+
+- name: Run post-install tasks
+  include: post-install.yaml
+  tags: post-install

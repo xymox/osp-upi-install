@@ -4,3 +4,7 @@
   vars:
     ssh_public_key: "{{ lookup('file', '{{ ssh_public_key_location }}.pub') }}"
   tags: ignition
+
+- name: Manage rhcos image
+  include: upload-rhcos-image.yml
+  tags: rhcos_image

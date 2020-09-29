@@ -4,3 +4,20 @@ ssh_public_key_location: /root/.ssh/id_rsa
 
 openshift_install_command: openshift-install
 
+master_flavor: ocp4-master
+master_count: 3
+master_vcpu: 4
+master_memory_size: 16384
+master_memory_unit: 'MiB'
+# qemu-img image size specified.
+#   You may use k, M, G, T, P or E suffixe
+master_root_disk_size: '120G'
+
+compute_flavor: ocp4-compute
+compute_count: 3
+compute_vcpu: 2
+compute_memory_size: 8192
+compute_memory_unit: 'MiB'
+# qemu-img image size specified.
+#   You may use k, M, G, T, P or E suffixe
+compute_root_disk_size: '120G'

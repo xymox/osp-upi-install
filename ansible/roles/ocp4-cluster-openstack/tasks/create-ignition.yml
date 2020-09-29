@@ -1,5 +1,5 @@
 ---
-- name: Ensure installion directory
+- name: Ensure installation directory
   file:
     path: "{{ openshift_install_dir }}"
     state: directory
@@ -28,6 +28,7 @@
   args:
     creates: "{{ openshift_install_dir}}/openshift"
     chdir: "{{ openshift_install_dir }}"
+  tags: manifests
 
 - name: Find unused manifests
   find:
@@ -36,40 +37,45 @@
     - 99_openshift-cluster-api_master-machines-*.yaml
     - 99_openshift-cluster-api_worker-machineset-*.yaml
   register: files_to_delete
+  tags: manifests
 
 - name: Delete unused manifests
   file:
     path: "{{ item.path }}"
     state: absent
   with_items: "{{ files_to_delete.files }}"
+  tags: manifests
 
 - name: Disable masterSchedulable
   lineinfile:
     path: "{{ openshift_install_dir}}/manifests/cluster-scheduler-02-config.yml"
     regexp: '^  mastersSchedulable: true'
     line: "  mastersSchedulable: false"
+  tags: manifests
 
 - name: Create ignition files
   command: "{{ openshift_install_command }} --dir={{ openshift_install_dir }} create ignition-configs"
   args:
     creates: "{{ openshift_install_dir}}/metadata.json"
     chdir: "{{ openshift_install_dir }}"
+  tags: ignition
 
 - name: Register infra_id
   set_fact:
     infra_id: "{{ lookup('file', openshift_install_dir + '/metadata.json') | from_json | json_query('infraID') }}"
-  tags: infraid,masterign
+  tags: ignition,infraid,masterign
 
 - name: Show infra_id
   debug:
     msg: "{{ infra_id }}"
-  tags: infraid
+  tags: ignition,infraid
 
 - name: "Copy ignition utility to {{ openshift_install_dir }}"
   copy:
     src: generate_bootstrap_ign.py
     dest: "{{ openshift_install_dir }}/generate_bootstrap_ign.py"
     mode: 0755
+  tags: ignition
 
 - name: Adjust boostrap.ign for UPI installation mode
   command: ./generate_bootstrap_ign.py
@@ -77,11 +83,21 @@
     chdir: "{{ openshift_install_dir }}"
   environment:
     INFRA_ID: "{{ infra_id }}"
+  tags: ignition
 
 - name: Copy bootstrap.ign to httpd server
   copy:
     src: "{{ openshift_install_dir }}/bootstrap.ign.upi"
-    dest: /var/www/html/ignition/bootstrap.ign
+    dest: /var/www/html/ignition/bootstrap-{{ infra_id }}.ign
+  tags: ignition
+
+- name: Create bootstrap boot ignition file
+  template:
+    src: bootstrap-ignition.ign.j2
+    dest: "{{ openshift_install_dir }}/{{ infra_id }}-bootstrap-ignition.json"
+  vars:
+    ignition_http_url: "http://10.207.127.165:8080/ignition/bootstrap-{{ infra_id }}.ign"
+  tags: ignition
 
 - name: Customize master ignition files
   shell: |

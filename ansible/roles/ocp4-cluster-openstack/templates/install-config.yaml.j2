@@ -20,18 +20,18 @@ networking:
   - cidr: 10.128.0.0/14
     hostPrefix: 23
   machineNetwork:
-  - cidr: 10.197.0.0/24
-  networkType: OpenShiftSDN
+  - cidr: {{ machine_network }}
+  networkType: {{ network_type }}
   serviceNetwork:
   - 172.30.0.0/16
 platform:
   openstack:
     cloud: openstack
-    clusterOSImage: file:///home/centos/rhcos-openstack.x86_64.qcow2
+    clusterOSImage: file://{{ rhcos_osp_file }}
     computeFlavor: {{ osp_compute_flavor }}
-    externalNetwork: {{ osp_external_network }}
-{%- if osp_external_dns is defined %}
-    externalDNS: {{ osp_external_dns }}
+    externalNetwork: "{{ osp_external_network }}"
+{% if osp_external_dns is defined and (osp_external_dns|length>0) %}
+    externalDNS: [ {{ osp_external_dns | map('regex_replace', '^(.*)$', '\"\\1\"' ) | join(', ') }} ]
 {% endif %}
 {%- if osp_lb_floating_ip is defined %}
     lbFloatingIP: {{ osp_lb_floating_ip }}
@@ -43,8 +43,7 @@ publish: External
 pullSecret: {{ image_pull_secret }}
 sshKey: |
   {{ ssh_public_key }}
-
-{%- if install_config_proxy is defined %}
+{% if install_config_proxy is defined %}
 proxy:
   {{ install_config_proxy  | to_nice_yaml(indent=2) | indent(width=2) }}
 {% endif %}

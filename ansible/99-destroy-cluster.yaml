@@ -9,7 +9,7 @@
   - ../cluster.yml
 
   tasks:
-  - name: Deploy cluster
+  - name: Destroy cluster
     import_role:
       name: ocp4-create-cluster
-      tasks_from: create.yml
+      tasks_from: destroy.yaml

@@ -1,0 +1,11 @@
+---
+- name: 'Create fip for api'
+  command:
+    cmd: "openstack floating ip create --dns-name 'api' --dns-domain '{{ cluster_name }}.{{ public_domain }}.' --description 'API {{ cluster_name }}.{{ public_domain }}' {{ osp_external_network }}"
+  tags: fip
+
+- name: 'Create fip for *.apps'
+  command:
+    cmd: "openstack floating ip create --dns-name 'apps' --dns-domain '{{ cluster_name }}.{{ public_domain }}.' --description 'APPS {{ cluster_name }}.{{ public_domain }}' {{ osp_external_network }}"
+  tags: fip
+

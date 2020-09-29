@@ -1,0 +1,29 @@
+---
+- name: Load common vars
+  include: common.yaml
+  tags: always
+
+- name: Load specific vars
+  include: specific.yaml
+  tags: always
+
+- name: Debug var inclusion
+  debug:
+    msg: "Vars computed {{ os_bootstrap_ignition }}"
+  tags: debug
+
+- name: Destroy control plane
+  include: down-control-plane.yaml
+  tags: control-plane
+
+- name: Destroy bootstrap
+  include: down-bootstrap.yaml
+  tags: bootstrap
+
+- name: Destroy network
+  include: down-network.yaml
+  tags: network
+
+- name: Destroy Security Groups
+  include: down-security-groups.yaml
+  tags: network

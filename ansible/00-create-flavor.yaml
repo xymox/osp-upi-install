@@ -11,5 +11,5 @@
   tasks:
   - name: Deploy cluster
     import_role:
-      name: ocp4-create-cluster
-      tasks_from: create.yml
+      name: ocp4-cluster-openstack
+      tasks_from: create-flavor.yaml
