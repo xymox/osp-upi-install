@@ -1,0 +1,99 @@
+---
+- name: Ensure installion directory
+  file:
+    path: "{{ openshift_install_dir }}"
+    state: directory
+  tags: setup
+
+- name: Copy clouds.yaml to install config
+  copy:
+    src: "{{ playbook_dir }}/../clouds.yaml"
+    dest: "{{ openshift_install_dir }}/clouds.yaml"
+  tags: setup
+
+- name: Create install config
+  template:
+    src: install-config.yaml.j2
+    dest: "{{ openshift_install_dir }}/install-config.yaml"
+  tags: setup
+
+- name: Save install-config from deletion
+  copy:
+    dest: "{{ openshift_install_dir }}/install-config.yaml.original"
+    src: "{{ openshift_install_dir }}/install-config.yaml"
+  tags: setup
+
+- name: Create manifests files
+  command: "{{ openshift_install_command }} --dir={{ openshift_install_dir }} create manifests" 
+  args:
+    creates: "{{ openshift_install_dir}}/openshift"
+    chdir: "{{ openshift_install_dir }}"
+
+- name: Find unused manifests
+  find:
+    paths: "{{ openshift_install_dir}}/openshift"
+    patterns:
+    - 99_openshift-cluster-api_master-machines-*.yaml
+    - 99_openshift-cluster-api_worker-machineset-*.yaml
+  register: files_to_delete
+
+- name: Delete unused manifests
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ files_to_delete.files }}"
+
+- name: Disable masterSchedulable
+  lineinfile:
+    path: "{{ openshift_install_dir}}/manifests/cluster-scheduler-02-config.yml"
+    regexp: '^  mastersSchedulable: true'
+    line: "  mastersSchedulable: false"
+
+- name: Create ignition files
+  command: "{{ openshift_install_command }} --dir={{ openshift_install_dir }} create ignition-configs"
+  args:
+    creates: "{{ openshift_install_dir}}/metadata.json"
+    chdir: "{{ openshift_install_dir }}"
+
+- name: Register infra_id
+  set_fact:
+    infra_id: "{{ lookup('file', openshift_install_dir + '/metadata.json') | from_json | json_query('infraID') }}"
+  tags: infraid,masterign
+
+- name: Show infra_id
+  debug:
+    msg: "{{ infra_id }}"
+  tags: infraid
+
+- name: "Copy ignition utility to {{ openshift_install_dir }}"
+  copy:
+    src: generate_bootstrap_ign.py
+    dest: "{{ openshift_install_dir }}/generate_bootstrap_ign.py"
+    mode: 0755
+
+- name: Adjust boostrap.ign for UPI installation mode
+  command: ./generate_bootstrap_ign.py
+  args:
+    chdir: "{{ openshift_install_dir }}"
+  environment:
+    INFRA_ID: "{{ infra_id }}"
+
+- name: Copy bootstrap.ign to httpd server
+  copy:
+    src: "{{ openshift_install_dir }}/bootstrap.ign.upi"
+    dest: /var/www/html/ignition/bootstrap.ign
+
+- name: Customize master ignition files
+  shell: |
+    python -c "import base64, json, sys;
+    ignition = json.load(sys.stdin);
+    files = ignition['storage'].get('files', []);
+    zboub = base64.standard_b64encode(b'{{ infra_id }}-master-{{ item }}\n').decode().strip();
+    files.append({'path': '/etc/hostname', 'mode': 420, 'contents': {'source': 'data:text/plain;charset=utf-8;base64,' + zboub, 'verification': {}}, 'filesystem': 'root'});
+    ignition['storage']['files'] = files;
+    json.dump(ignition, sys.stdout)" < master.ign > "{{ infra_id}}-master-{{ item }}-ignition.json"
+  args:
+    chdir: "{{ openshift_install_dir }}"
+  with_sequence: start=0 end=2
+  tags: masterign
+

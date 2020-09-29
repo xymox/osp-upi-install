@@ -1,0 +1,11 @@
+- name: create a volume
+  hosts: localhost
+  tasks:
+  - name: create 10g test volume
+    openstack.cloud.volume:
+      state: present
+      cloud: openstack
+      image: rhcos-4.5
+      bootable: yes
+      size: 120
+      display_name: upi-master-0-rootvolume

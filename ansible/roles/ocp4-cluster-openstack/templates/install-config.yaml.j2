@@ -1,0 +1,50 @@
+apiVersion: v1
+baseDomain: {{ public_domain }}
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  platform: {}
+  replicas: 0
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  platform: {}
+  replicas: 3
+metadata:
+  creationTimestamp: null
+  name: {{ cluster_name }}
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 10.197.0.0/24
+  networkType: OpenShiftSDN
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  openstack:
+    cloud: openstack
+    clusterOSImage: file:///home/centos/rhcos-openstack.x86_64.qcow2
+    computeFlavor: {{ osp_compute_flavor }}
+    externalNetwork: {{ osp_external_network }}
+{%- if osp_external_dns is defined %}
+    externalDNS: {{ osp_external_dns }}
+{% endif %}
+{%- if osp_lb_floating_ip is defined %}
+    lbFloatingIP: {{ osp_lb_floating_ip }}
+{% endif %}
+    octaviaSupport: "1"
+    region: "{{ osp_region }}"
+    trunkSupport: "0"
+publish: External
+pullSecret: {{ image_pull_secret }}
+sshKey: |
+  {{ ssh_public_key }}
+
+{%- if install_config_proxy is defined %}
+proxy:
+  {{ install_config_proxy  | to_nice_yaml(indent=2) | indent(width=2) }}
+{% endif %}

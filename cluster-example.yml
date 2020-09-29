@@ -1,0 +1,8 @@
+---
+cluster_name: upi-cluster-01
+
+ssh_public_key_location: /home/centos/.ssh/id_rsa_ocp4
+openshift_install_dir: "/home/centos/UPI/{{ cluster_name }}"
+
+image_pull_secret: |-
+  asdfghfdsa
