@@ -1,0 +1,48 @@
+#!/usr/bin/env ansible-playbook
+---
+# If you like to play: ./ansible/create.yml --skip-tags public_dns,letsencrypt
+- hosts: localhost
+  connection: local
+  # gather_facts true because we need the public ip address
+  gather_facts: true
+  vars_files:
+  - ../cluster.yml
+
+  tasks:
+  - name: Lookup app recordset
+    debug:
+      msg: "{{ 'apps.' + cluster_name + '.' + public_domain + '.' }}"
+
+  - name: Lookup app recordset
+    set_fact:
+      apps_ip: "{{ lookup('dig', 'apps.' + cluster_name + '.' + public_domain + '.') }}"
+
+# Does not work
+#  - name: Delete recordsets apps.{{ cluster_name }}.{{ public_domain }}
+#    openstack.cloud.recordset:
+#      state: absent
+#      zone: "{{ cluster_name }}.{{ public_domain }}."
+#      name: "apps.{{ cluster_name }}.{{ public_domain }}."
+#    when: "apps_ip is defined"
+
+  - name: Create *.apps recordset
+    command:
+      cmd: "openstack recordset delete '{{ cluster_name }}.{{ public_domain }}.' 'apps.{{ cluster_name }}.{{ public_domain }}.'"
+    when: "apps_ip is defined"
+
+  - name: Create *.apps recordset
+    command:
+      cmd: "openstack recordset create --record '{{ apps_ip }}' --type A --ttl 600 --description 'OpenShift cluster {{ cluster_name }} apps wildcard recordset.' '{{ cluster_name }}.{{ public_domain }}.' '*.apps'"
+    when: "apps_ip is defined"
+
+#  - name: Create recordsets *.apps.{{ cluster_name }}.{{ public_domain }}
+#    openstack.cloud.recordset:
+#      state: present
+#      zone: "{{ cluster_name }}.{{ public_domain }}."
+#      name: "*.apps"
+#      recordset_type: primary
+#      records: [ "{{apps_ip}}" ]
+#      description: "OpenShift cluster {{ cluster_name }} apps wildcard recordset."
+#      ttl: 300
+#      region_name: "{{ osp_region }}"
+

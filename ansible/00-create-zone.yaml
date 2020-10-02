@@ -1,0 +1,21 @@
+#!/usr/bin/env ansible-playbook
+---
+# If you like to play: ./ansible/create.yml --skip-tags public_dns,letsencrypt
+- hosts: localhost
+  connection: local
+  # gather_facts true because we need the public ip address
+  gather_facts: true
+  vars_files:
+  - ../cluster.yml
+
+  tasks:
+  - name: Create zone {{ cluster_name }}.{{ public_domain }}
+    openstack.cloud.dns_zone:
+      state: present
+      name: "{{ cluster_name }}.{{ public_domain }}."
+      zone_type: primary
+      email: hostmaster@redhat.com
+      description: "OpenShift cluster {{ cluster_name }} dns zone"
+      ttl: 3600
+      region_name: "{{ osp_region }}"
+

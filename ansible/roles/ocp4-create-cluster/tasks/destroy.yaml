@@ -12,6 +12,10 @@
     msg: "Vars computed {{ os_bootstrap_ignition }}"
   tags: debug
 
+- name: Destroy compute nodes
+  include: down-compute-nodes.yaml
+  tags: compute-nodes
+
 - name: Destroy control plane
   include: down-control-plane.yaml
   tags: control-plane

@@ -34,9 +34,9 @@
     # OpenShift API floating IP address. If this value is non-empty, the
     # corresponding floating IP will be attached to the Control Plane to
     # serve the OpenShift API.
-    os_api_fip: '10.206.31.125'
+    os_api_fip: "{{ lookup('dig', 'api.' + cluster_name + '.' + public_domain + '.') }}"
   
     # OpenShift Ingress floating IP address. If this value is non-empty, the
     # corresponding floating IP will be attached to the worker nodes to serve
     # the applications.
-    os_ingress_fip: '10.206.31.34'
+    os_ingress_fip: "{{ lookup('dig', 'test.apps.' + cluster_name + '.' + public_domain + '.') }}"

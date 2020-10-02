@@ -1,5 +1,12 @@
 # Setup
 
+## Host setup
+
+````
+% sudo yum -y install python-dns
+````
+
+
 ## Create DNS zone
 
 openstack zone create

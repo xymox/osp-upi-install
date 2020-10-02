@@ -1,4 +1,16 @@
 ---
+- name: Define fip used for api and ingress
+  set_fact:
+    # OpenShift API floating IP address. If this value is non-empty, the
+    # corresponding floating IP will be attached to the Control Plane to
+    # serve the OpenShift API.
+    os_api_fip: "{{ lookup('dig', 'api.' + cluster_name + '.' + public_domain + '.') }}"
+
+    # OpenShift Ingress floating IP address. If this value is non-empty, the
+    # corresponding floating IP will be attached to the worker nodes to serve
+    # the applications.
+    os_ingress_fip: "{{ lookup('dig', 'test.apps.' + cluster_name + '.' + public_domain + '.') }}"
+
 - name: Create ignition files
   include: create-ignition.yml
   vars:

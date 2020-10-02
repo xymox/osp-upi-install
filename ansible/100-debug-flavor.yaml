@@ -1,0 +1,20 @@
+#!/usr/bin/env ansible-playbook
+---
+# If you like to play: ./ansible/create.yml --skip-tags public_dns,letsencrypt
+- hosts: localhost
+  connection: local
+  # gather_facts true because we need the public ip address
+  gather_facts: true
+  vars_files:
+  - ../cluster.yml
+
+  tasks:
+  - name: Lookup {{ master_flavor }}
+    openstack.cloud.compute_flavor_info:
+      name: "{{ master_flavor }}"
+    register: master_flavor_result
+
+  - name: Debug flavor info
+    debug:
+      msg: "{{ result }}"
+    when: "master_flavor_result.openstack_flavors is defined and master_flavor_result.openstack_flavors|length()>0"

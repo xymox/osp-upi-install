@@ -9,11 +9,9 @@
   - ../cluster.yml
 
   tasks:
-  - name: Lookup pull-secret
-    debug:
-      msg: '{{ lookup("file", "{{ playbook_dir }}/../pull-secret.json") | to_json }}'
-
   - name: Deploy cluster
     import_role:
-      name: ocp4-cluster-openstack
+      name: ocp4-create-cluster
       tasks_from: create.yml
+    vars:
+     os_compute_server_index: 2

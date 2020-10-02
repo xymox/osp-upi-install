@@ -28,6 +28,10 @@ platform:
   openstack:
     cloud: openstack
     clusterOSImage: file://{{ rhcos_osp_file }}
+{% if False %}
+    apiVIP: {{ os_api_fip }}
+    ingressVIP: {{ os_ingress_fip }}
+{% endif %}
     computeFlavor: {{ osp_compute_flavor }}
     externalNetwork: "{{ osp_external_network }}"
 {% if osp_external_dns is defined and (osp_external_dns|length>0) %}
