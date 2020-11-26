@@ -1,0 +1,15 @@
+# Required Python packages:
+#
+# ansible
+# openstackclient
+# openstacksdk
+
+- name: 'Remove the Compute servers'
+  os_server:
+    name: "{{ os_compute_server_name }}-{{ os_compute_server_index }}"
+    state: absent
+
+- name: 'Remove the Compute ports'
+  os_port:
+    name: "{{ os_port_worker }}-{{ os_compute_server_index }}"
+    state: absent

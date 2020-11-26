@@ -1,0 +1,39 @@
+# Required Python packages:
+#
+# ansible
+# openstackclient
+# openstacksdk
+# netaddr
+
+- name: 'Create the Compute ports'
+  os_port:
+    name: "{{ os_port_worker }}-{{ os_compute_server_index }}"
+    network: "{{ os_network }}"
+    security_groups:
+    - "{{ os_sg_worker }}"
+    allowed_address_pairs:
+    - ip_address: "{{ os_subnet_range | next_nth_usable(7) }}"
+  register: ports
+
+- name: 'Set Compute ports tag'
+  command:
+    cmd: "openstack port set --tag {{ cluster_id_tag }} {{ os_port_worker }}-{{ os_compute_server_index }}"
+
+- name: Create physical boot volume
+  openstack.cloud.volume:
+    state: present
+    image: "{{ os_image_rhcos }}"
+    bootable: yes
+    size: 120
+    display_name: "{{ os_compute_server_name }}-{{ os_compute_server_index }}-rootvolume"
+
+- name: 'Create the Compute servers'
+  os_server:
+    name: "{{ os_compute_server_name }}-{{ os_compute_server_index }}"
+    # image: "{{ os_image_rhcos }}"
+    boot_volume: "{{ os_compute_server_name }}-{{ os_compute_server_index }}-rootvolume"
+    flavor: "{{ os_flavor_worker }}"
+    auto_ip: no
+    userdata: "{{ lookup('file', openshift_install_dir + '/' + 'worker.ign') | string }}"
+    nics:
+    - port-name: "{{ os_port_worker }}-{{ os_compute_server_index  }}"

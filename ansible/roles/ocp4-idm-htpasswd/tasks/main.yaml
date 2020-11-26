@@ -1,0 +1,37 @@
+---
+- name: Configure htpasswd idm
+  environment:
+    KUBECONFIG: "{{ openshift_install_dir }}/auth/kubeconfig"
+  block:
+  - name: Upload OAuth Configuration File
+    copy:
+      src: "./files/oauth-htpasswd.yaml"
+      dest: "{{ openshift_install_dir }}/oauth-htpasswd.yaml"
+      owner: "{{ ansible_user }}"
+      mode: 0664
+
+  - name: Create htpasswd Secret
+    # command: "oc create secret generic htpasswd-secret -n openshift-config --from-file=htpasswd={{ openshift_install_dir }}/users.htpasswd"
+    command: "oc create secret generic htpasswd-secret -n openshift-config --from-file=htpasswd={{ playbook_dir }}/../users.htpasswd"
+    ignore_errors: true
+
+  - name: Update OAuth Configuration
+    shell: "oc apply -f {{ openshift_install_dir }}/oauth-htpasswd.yaml"
+
+  - name: Set up Admin User
+    when: admin_users is defined
+    shell: "oc adm policy add-cluster-role-to-user cluster-admin {{ item }}"
+    # try for 5 minutes
+    retries: 30
+    delay: 10
+    loop: "{{ admin_users }}"
+    register: r_setup_admin_user
+    until: r_setup_admin_user is succeeded
+
+  - name: Remove kubeadmin User
+    when:
+    - admin_user is defined
+    - install_idm != "none"
+    - auth_remove_kubeadmin
+    command: "oc delete secret kubeadmin -n kube-system"
+    ignore_errors: true

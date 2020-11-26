@@ -9,10 +9,7 @@
   - ../cluster.yml
 
   tasks:
-  - name: Deploy cluster
+  - name: Configure IdM
     import_role:
-      name: ocp4-create-cluster
-      tasks_from: create.yml
-    vars:
-     os_compute_server_index: 9
-
+      name: ocp4-idm-htpasswd
+      tasks_from: main.yaml

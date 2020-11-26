@@ -40,11 +40,11 @@
   include: add-compute-node.yaml
   tags: never
 
-- name: Remove compute node
-  include: remove-compute-node.yaml
-  tags:
-  - never
-  - remove-compute-node
+#- name: Remove compute node
+#  include: remove-compute-node.yaml
+#  tags:
+#  - never
+#  - remove-compute-node
 
 - name: Run post-install tasks
   include: post-install.yaml
